@@ -13,6 +13,8 @@ public class FletteTraad implements Runnable {
         this.antallFiler = antallFiler;
     
     }
+     
+
         
 
     @Override

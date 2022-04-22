@@ -89,15 +89,11 @@ public class Monitor2 extends SubsekvensRegister{
         }
      }
     
-     @Override
-    public int hentAntallHashMaps(){
-        laas.lock();
-        try{
+   
+    public int hentAntallHashMaps(){   
         return hashBeholder.size();
-        } finally{
-            laas.unlock();
-        }
     }
+    
     
    
     
@@ -139,6 +135,7 @@ public class Monitor2 extends SubsekvensRegister{
         
         System.out.println("Slaar sammen to kart!");
         return nyHash;
+        
          
     }
 }

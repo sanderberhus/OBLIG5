@@ -9,15 +9,18 @@ public class Oblig5Hele {
     private static Monitor2 harIkkeHattSykdom = new Monitor2();
     private static int antallHarHattSykdom = 0;
     private static int antallHarIkkeHattSykdom = 0;
-    private final static int MAX = 8;
+    private final static int ANTALLFLETTETRADER = 16;
+    private final static int KONSTANT = 8;
     //private final int ANTALL_FLETTETRAADER;
 
     public static void main(String[] args) throws FileNotFoundException, InterruptedException {
         String path = args[0];
         opprettSubsekvensRegister(path);
+        slaaSammenHash(harHattSykdom);
+        slaaSammenHash(harIkkeHattSykdom);
         skrivUtFlestSubsekvenser();
 
-        System.exit(0);
+        //System.exit(0);
     
         
     }
@@ -49,6 +52,7 @@ public class Oblig5Hele {
             }else{
                 antallHarIkkeHattSykdom++;
             }
+           
 
             if (Boolean.parseBoolean(biter[1])){
                 // antallHarHattSykdom++;
@@ -66,59 +70,41 @@ public class Oblig5Hele {
         barrier.await();
         System.out.println("Ferdig med LeseTrådbarriere.");
 
-        int antallFiler = nyFil.list().length-1;
+        
 
-        final int ANTALL_FLETTETRAADER;
+        // int antallFiler = nyFil.list().length-1;
+
+        // final int ANTALL_FLETTETRAADER;
+        CountDownLatch barrier3;
 
         if (antallHarHattSykdom > 1 && antallHarIkkeHattSykdom > 1){
-            ANTALL_FLETTETRAADER = antallFiler - 2;
+            // ANTALL_FLETTETRAADER = antallFiler - 2;
+            barrier3 = new CountDownLatch(ANTALLFLETTETRADER);
         } else{
-            ANTALL_FLETTETRAADER = antallFiler - 1;
+            // ANTALL_FLETTETRAADER = antallFiler - 1;
+            barrier3 = new CountDownLatch(KONSTANT);
+            
         }
     
 
     
-        CountDownLatch barrier2 = new CountDownLatch(ANTALL_FLETTETRAADER);
+        // CountDownLatch barrier2 = new CountDownLatch(ANTALL_FLETTETRAADER);
 
         
 
-        for (int i = 0; i < MAX; i++){
-            Runnable fletteTraad = new FletteTraad(harHattSykdom, antallHarHattSykdom - 1, barrier2);
+        for (int i = 0; i < KONSTANT; i++){
+            Runnable fletteTraad = new FletteTraad(harHattSykdom, antallHarHattSykdom - 1, barrier3);
             Thread traad = new Thread(fletteTraad);
             traad.start();
         }
-        for (int i = 0; i < MAX; i++){
-            Runnable fletteTraad = new FletteTraad(harIkkeHattSykdom, antallHarIkkeHattSykdom - 1, barrier2);
+        for (int i = 0; i < KONSTANT; i++){
+            Runnable fletteTraad = new FletteTraad(harIkkeHattSykdom, antallHarIkkeHattSykdom - 1, barrier3);
             Thread traad = new Thread(fletteTraad);
             traad.start();
         }
 
-         //Fletter de som ikke har hatt sykdom
-        //  if (antallHarIkkeHattSykdom > 1) {
-             
-        //     for (int i = 0; i < antallHarIkkeHattSykdom - 1; i++) {
-        //         Runnable fletteTraad = new FletteTraad(harIkkeHattSykdom, antallHarIkkeHattSykdom, barrier2);
-        //         Thread traad = new Thread(fletteTraad);
-        //         traad.start();
-        //     }
-        // } else {
-        //     Runnable fletteTraad = new FletteTraad(harIkkeHattSykdom, antallHarIkkeHattSykdom, barrier2);
-        //     Thread traad = new Thread(fletteTraad);
-        //     traad.start();
-        // }
-        // //Flett de som har hatt sykdom
-        // if (antallHarHattSykdom > 1) {
-        //     for (int i = 0; i < antallHarHattSykdom - 1; i++) {
-        //         Runnable fletteTraad = new FletteTraad(harHattSykdom, antallHarHattSykdom, barrier2);
-        //         Thread traad = new Thread(fletteTraad);
-        //         traad.start();
-        //     }
-        // } else {
-        //     Runnable fletteTraad = new FletteTraad(harHattSykdom, antallHarHattSykdom, barrier2);
-        //     Thread traad = new Thread(fletteTraad);
-        //     traad.start();
-        
-        barrier2.await();
+
+        barrier3.await();
     
         System.out.println("Ferdig med Fletting.");
     }
@@ -133,24 +119,9 @@ public class Oblig5Hele {
         }
     }
 
-    private static void skrivUtFlest(Monitor2 monitor){
-        HashMap<String, Subsekvens> newHash = monitor.hentRegister();
-        Subsekvens flest = null;
-        boolean check = true;
 
-        for (String key : newHash.keySet()){
-            if (check) {
-                flest = newHash.get(key);
-                check = false;
-            } else {
-                if (newHash.get(key).hentAntall() > flest.hentAntall()){
-                    flest = newHash.get(key);
-                }
-            }
-        }
-        System.out.println(flest);
 
-    }
+    //Oppdatert i oppgave 12
     private static void skrivUtFlestSubsekvenser(){
         HashMap<String, Subsekvens> harHatt = harHattSykdom.hentRegister();
         HashMap<String, Subsekvens> harIkkeHatt = harIkkeHattSykdom.hentRegister();
@@ -158,32 +129,48 @@ public class Oblig5Hele {
 
         ArrayList<String> flest = new ArrayList<>();
 
-        for (String nokkel1 : harHatt.keySet()){
-            if (harIkkeHatt.keySet().contains(nokkel1)){
-                for (String nokkel2 : harIkkeHatt.keySet()){
-                    if (nokkel1.equals(nokkel2)){
-                        antall = harHatt.get(nokkel1).hentAntall() - harIkkeHatt.get(nokkel2).hentAntall();
+        for (String key1 : harHatt.keySet()){
+            if (harIkkeHatt.keySet().contains(key1)){
+                for (String key2 : harIkkeHatt.keySet()){
+                    if (key1.equals(key2)){
+                        antall = harHatt.get(key1).hentAntall() - harIkkeHatt.get(key2).hentAntall();
                     }
                 }
             }
             else {
-                antall = harHatt.get(nokkel1).hentAntall();
+                antall = harHatt.get(key1).hentAntall();
             }
             
             if (antall > 6){
-                flest.add(nokkel1);
+                flest.add(key1);
             } 
         }
         for (String mindre : flest) {
-            System.out.println(mindre);
-        }
+            int differanse = harHatt.get(mindre).hentAntall() - harIkkeHatt.get(mindre).hentAntall();
+            System.out.println(mindre + " med " + differanse + " flere forekomster.");
+        }    
 
-       
-
-    
-       
-    
     }
+
+     // private static void skrivUtFlest(Monitor2 monitor){
+    //     HashMap<String, Subsekvens> newHash = monitor.hentRegister();
+    //     Subsekvens flest = null;
+    //     boolean check = true;
+
+    //     for (String key : newHash.keySet()){
+    //         if (check) {
+    //             flest = newHash.get(key);
+    //             check = false;
+    //         } else {
+    //             if (newHash.get(key).hentAntall() > flest.hentAntall()){
+    //                 flest = newHash.get(key);
+    //             }
+    //         }
+    //     }
+    //     System.out.println(flest);
+
+    // }
+
     
 }
 
